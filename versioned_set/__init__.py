@@ -3,6 +3,8 @@ import dataclasses
 import enum
 import typing
 
+T = typing.TypeVar("T")
+
 
 class Op(enum.Enum):
     ADD = 1
@@ -10,26 +12,26 @@ class Op(enum.Enum):
 
 
 @dataclasses.dataclass
-class Diff:
+class Diff(typing.Generic[T]):
 
-    obj: typing.Any
+    obj: T
     op: Op
 
 
-class VersionedSet:
+class VersionedSet(typing.Generic[T]):
 
     def __init__(self):
-        self.diffs: list[Diff] = []
-        self.current = {}
+        self.diffs: list[Diff[T]] = []
+        self.current: dict[T, int] = {}
 
-    def add(self, obj):
+    def add(self, obj: T) -> int:
         if obj not in self.current:
             self.diffs.append(Diff(obj, Op.ADD))
             self.current[obj] = 1
 
         return len(self.diffs)
 
-    def remove(self, obj):
+    def remove(self, obj: T) -> int:
         try:
             del self.current[obj]
         except KeyError:
@@ -39,7 +41,7 @@ class VersionedSet:
 
         return len(self.diffs)
 
-    def members(self, version):
+    def members(self, version: int) -> list[T]:
         num_versions = len(self.diffs)
         if version > num_versions:
             raise IndexError()
@@ -49,7 +51,7 @@ class VersionedSet:
 
         return self._build_members_from_back(version)
 
-    def _build_members_from_front(self, version):
+    def _build_members_from_front(self, version: int) -> list[T]:
         values = {}
         for i in range(version):
             diff = self.diffs[i]
@@ -62,12 +64,10 @@ class VersionedSet:
 
         return list(values.keys())
 
-    def _build_members_from_back(self, version):
+    def _build_members_from_back(self, version: int) -> list[T]:
         values = self.current.copy()
         for i in range(len(self.diffs)-1, version-1, -1):
-            print(i)
             diff = self.diffs[i]
-            print(diff)
             if diff.op == Op.ADD:
                 del values[diff.obj]
             elif diff.op == Op.REMOVE:
