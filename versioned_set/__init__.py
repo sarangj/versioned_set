@@ -41,7 +41,7 @@ class VersionedSet(typing.Generic[T]):
 
         return len(self.diffs)
 
-    def members(self, version: int) -> list[T]:
+    def members(self, version: int = 0) -> list[T]:
         num_versions = len(self.diffs)
         if version > num_versions:
             raise IndexError()
